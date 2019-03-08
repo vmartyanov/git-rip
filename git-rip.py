@@ -14,10 +14,9 @@ import urllib.parse
 
 import requests
 
-sys.path.append("C:\\Programming\\python_lib")
 import mva.log as log
 import mva.git as git
-import net2
+import mva.net as net
 log.fileName = "log"
 
 def TransformURL(inURL):
@@ -41,9 +40,9 @@ def TransformURL(inURL):
 	
 def CheckTor():
 	log.Info("Checking TOR...")
-	net2.SetProxy("socks5", "127.0.0.1", 9150)
+	net.SetProxy("socks5", "127.0.0.1", 9150)
 	try:
-		if (not net2.CheckTor()):
+		if (not net.CheckTor()):
 			log.Error("TOR isn't used!")
 		else:
 			log.Info("TOR is properly configured!")
@@ -88,7 +87,7 @@ def RetrieveFile(target, relPath, baseDir, fromNetwork, compressed = True):
 		sleepTime = 1
 		while(1):
 			try:
-				data = net2.GET(finalUrl, 30).content
+				data = net.GET(finalUrl, 30).content
 				break
 			except BaseException as e :
 				log.Error("Error downloading " + finalUrl + " (" + str(e) + ")")
