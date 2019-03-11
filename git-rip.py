@@ -69,11 +69,17 @@ def GetFileContent(absPath):
 	return data
 
 def GetDecompressedObject(baseDir, objName):
+	ret = b""
 	absPath = os.path.join(baseDir, "objects", objName[:2], objName[2:])
 	compressed = GetFileContent(absPath)
 	if (len(compressed) == 0):				#empty file, or it doesn't exists
-		return b""
-	return zlib.decompress(compressed)
+		return ret
+	
+	try:
+		ret = zlib.decompress(compressed)
+	except:
+		pass
+	return ret
 
 def RetrieveFile(target, relPath, baseDir, fromNetwork, compressed = True):
 	finalPath = os.path.join(baseDir, relPath)
