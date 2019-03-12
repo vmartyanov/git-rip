@@ -9,6 +9,7 @@ import zlib
 import shutil
 import struct
 import socket
+import hashlib
 import argparse
 import urllib.parse
 
@@ -216,6 +217,17 @@ def GetObjectsFromIndex(baseDir, gitTree):
 
 	return ret
 	
+def PrintHashes(outDir):
+	h = hashlib.sha1()
+	h.update(GetFileContent(os.path.join(outDir, "index")))
+	indexHash = h.digest().hex()
+	
+	h = hashlib.sha1()
+	h.update(GetFileContent(os.path.join(outDir, "logs", "HEAD")))
+	headHash = h.digest().hex()
+	
+	log.Result("Hashes: " + indexHash + " " + headHash)
+	
 def Main():
 	processedObjects = set()
 	gitTree = git.GitTree()
@@ -243,6 +255,7 @@ def Main():
 		return
 	
 	RetrieveRootFiles(url, outDir, not args.from_file)
+	PrintHashes(outDir)
 	objSet = ParseLogsHead(os.path.join(outDir, "logs", "HEAD"))
 	objectsCount = len(objSet)
 	while (objectsCount != 0):
