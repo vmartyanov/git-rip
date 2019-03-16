@@ -13,14 +13,20 @@ import hashlib
 import argparse
 import urllib.parse
 
+from typing import Set
+
 import requests
 
-import mva.log as log
-import mva.git as git
-import mva.net as net
+try:
+	import mva.log as log
+	import mva.git as git
+	import mva.net as net
+except ImportError:
+	print ("You need this lib to run the script: https://github.com/vmartyanov/PythonLib")
+	exit(1)
 log.fileName = "log"
 
-def TransformURL(inURL):
+def TransformURL(inURL: str) -> str:
 	outURL = inURL
 	if (outURL.endswith('/')):			#cut off the last slash if exists
 		outURL = outURL[:-1]
@@ -35,11 +41,11 @@ def TransformURL(inURL):
 		outURL = "http://" + inURL
 	elif (components.scheme != "http" and components.scheme != "https"):
 		log.Error("Unknown scheme " + components.scheme)
-		return None
+		return ""
 	
 	return outURL
 	
-def CheckTor():
+def CheckTor() -> bool:
 	log.Info("Checking TOR...")
 	net.SetProxy("socks5", "127.0.0.1", 9150)
 	try:
@@ -53,14 +59,14 @@ def CheckTor():
 
 	return False
 
-def CreateDirs(baseDir):
+def CreateDirs(baseDir: str) -> None:
 	mustHaveDirs = [os.path.join(baseDir, "objects"), os.path.join(baseDir, "refs"), os.path.join(baseDir, "logs")]
 	# "objects" and "refs" are needed to run "git fsck"
 	for path in mustHaveDirs:
 		if (not os.path.exists(path)):
 			os.makedirs(path)
 
-def GetFileContent(absPath):
+def GetFileContent(absPath: str) -> bytes:
 	try:
 		f = open(absPath, "rb")
 	except:
@@ -69,7 +75,7 @@ def GetFileContent(absPath):
 	f.close()
 	return data
 
-def GetDecompressedObject(baseDir, objName):
+def GetDecompressedObject(baseDir: str, objName: str) -> bytes:
 	ret = b""
 	absPath = os.path.join(baseDir, "objects", objName[:2], objName[2:])
 	compressed = GetFileContent(absPath)
@@ -82,7 +88,7 @@ def GetDecompressedObject(baseDir, objName):
 		pass
 	return ret
 
-def RetrieveFile(target, relPath, baseDir, fromNetwork, compressed = True):
+def RetrieveFile(target: str, relPath: str, baseDir: str, fromNetwork: bool, compressed: bool = True) -> bool:
 	finalPath = os.path.join(baseDir, relPath)
 	finalPath = finalPath.replace("/", os.sep)
 	if (os.path.exists(finalPath)):
@@ -129,7 +135,7 @@ def RetrieveFile(target, relPath, baseDir, fromNetwork, compressed = True):
 	f.close()
 	return True
 
-def RetrieveRootFiles(target, baseDir, fromNetwork = True):
+def RetrieveRootFiles(target: str, baseDir: str, fromNetwork: bool = True) -> None:
 	rootFiles = ["config", "COMMIT_EDITMSG", "description", "HEAD", "index", "packed-refs", "logs/HEAD"]
 	
 	for file in rootFiles:
@@ -138,8 +144,8 @@ def RetrieveRootFiles(target, baseDir, fromNetwork = True):
 		else:
 			log.Info(file + " file retrieved")
 
-def ParseLogsHead(absPath):
-	out = set()
+def ParseLogsHead(absPath: str) -> Set[str]:
+	out: Set[str] = set()
 	try:
 		file = open(absPath, "r", errors = "ignore")#ignore errors for comments in national langs
 	except:
@@ -243,7 +249,7 @@ def Main():
 		outDir = "out"
 	else:
 		url = TransformURL(args.targetURL)
-		if (url == None):
+		if (url == ""):
 			return
 		outDir = urllib.parse.urlparse(url).netloc
 	
