@@ -45,9 +45,9 @@ def TransformURL(inURL: str) -> str:
 	
 	return outURL
 	
-def CheckTor() -> bool:
-	log.Info("Checking TOR...")
-	net.SetProxy("socks5", "127.0.0.1", 9150)
+def CheckTor(hostname: str, port: int) -> bool:
+	log.Info("Checking TOR on " + hostname + ":" + str(port) + "...")
+	net.SetProxy("socks5", hostname, port)
 	try:
 		if (not net.CheckTor()):
 			log.Error("TOR isn't used!")
@@ -241,6 +241,8 @@ def Main():
 	argparser = argparse.ArgumentParser(description='Rip off data from .git directory')
 	argparser.add_argument("targetURL", help = "Target URL")
 	argparser.add_argument("--from-file", default = False, action='store_const', const=True, help = "Target is a directory, not URL")
+	argparser.add_argument("--tor-host", default = "127.0.0.1", nargs = '?', help = "Hostname of tor proxy")
+	argparser.add_argument("--tor-port", default = 9150, nargs = '?', help = "Portnumber of tor proxy")
 
 	args = argparser.parse_args()
 	
@@ -257,7 +259,7 @@ def Main():
 	log.Info("Saving results to " + outDir)
 	CreateDirs(outDir)
 	
-	if (not CheckTor()):
+	if (not CheckTor(args.tor_host, args.tor_port)):
 		return
 	
 	RetrieveRootFiles(url, outDir, not args.from_file)
