@@ -88,7 +88,7 @@ def GetDecompressedObject(baseDir: str, objName: str) -> bytes:
 		pass
 	return ret
 
-def RetrieveFile(target: str, relPath: str, baseDir: str, fromNetwork: bool, compressed: bool = True) -> bool:
+def RetrieveFile(target: str, relPath: str, baseDir: str, fromNetwork: bool, userAgent: str, compressed: bool = True) -> bool:
 	finalPath = os.path.join(baseDir, relPath)
 	finalPath = finalPath.replace("/", os.sep)
 	if (os.path.exists(finalPath)):
@@ -100,7 +100,7 @@ def RetrieveFile(target: str, relPath: str, baseDir: str, fromNetwork: bool, com
 		sleepTime = 1
 		while(1):
 			try:
-				data = net.GET(finalUrl, 30).content
+				data = net.GET(finalUrl, 30, userAgent = userAgent).content
 				break
 			except BaseException as e :
 				log.Error("Error downloading " + finalUrl + " (" + str(e) + ")")
@@ -135,11 +135,11 @@ def RetrieveFile(target: str, relPath: str, baseDir: str, fromNetwork: bool, com
 	f.close()
 	return True
 
-def RetrieveRootFiles(target: str, baseDir: str, fromNetwork: bool = True) -> None:
+def RetrieveRootFiles(target: str, baseDir: str, userAgent: str, fromNetwork: bool = True) -> None:
 	rootFiles = ["config", "COMMIT_EDITMSG", "description", "HEAD", "index", "packed-refs", "logs/HEAD"]
-	
+
 	for file in rootFiles:
-		if (not RetrieveFile(target, file, baseDir, fromNetwork, compressed = False)):
+		if (not RetrieveFile(target, file, baseDir, fromNetwork, userAgent, compressed = False)):
 			log.Info("No " + file + " found")
 		else:
 			log.Info(file + " file retrieved")
@@ -157,11 +157,11 @@ def ParseLogsHead(absPath: str) -> Set[str]:
 	file.close()
 	return out
 	
-def ProcessObject(target, objName, baseDir, gitTree, fromNetwork):
+def ProcessObject(target, objName, baseDir, gitTree, fromNetwork, userAgent):
 	outSet = set()
 	
 	relPath = "objects/" + objName[:2] + "/" + objName[2:]
-	if (not RetrieveFile(target, relPath, baseDir, fromNetwork)):
+	if (not RetrieveFile(target, relPath, baseDir, fromNetwork, userAgent)):
 		return (0, outSet)
 	
 	data = GetDecompressedObject(baseDir, objName)
@@ -243,6 +243,7 @@ def Main():
 	argparser.add_argument("--from-file", default = False, action='store_const', const=True, help = "Target is a directory, not URL")
 	argparser.add_argument("--tor-host", default = "127.0.0.1", nargs = '?', help = "Hostname of tor proxy")
 	argparser.add_argument("--tor-port", default = 9150, nargs = '?', help = "Portnumber of tor proxy")
+	argparser.add_argument("--user-agent", default = None, nargs = '?', help = "User-agent")
 
 	args = argparser.parse_args()
 	
@@ -262,7 +263,7 @@ def Main():
 	if (not CheckTor(args.tor_host, args.tor_port)):
 		return
 	
-	RetrieveRootFiles(url, outDir, not args.from_file)
+	RetrieveRootFiles(url, outDir, args.user_agent, not args.from_file)
 	PrintHashes(outDir)
 	objSet = ParseLogsHead(os.path.join(outDir, "logs", "HEAD"))
 	objectsCount = len(objSet)
@@ -277,7 +278,7 @@ def Main():
 			log.Info("Retrieving object " + obj + " (" + str(currentID) + "/" + str(objectsCount) + ")")
 			
 			processedObjects.add(obj)
-			result, tmpList = ProcessObject(url, obj, outDir, gitTree, fromNetwork = not args.from_file)
+			result, tmpList = ProcessObject(url, obj, outDir, gitTree, not args.from_file, args.user_agent)
 			nextLevelSet = nextLevelSet | tmpList
 			success = success + result
 
@@ -293,7 +294,7 @@ def Main():
 	for obj in objSet:
 		currentID = currentID + 1
 		log.Info("Retrieving object " + obj + " (" + str(currentID) + "/" + str(objectsCount) + ")")
-		result, tmpList = ProcessObject(url, obj, outDir, gitTree, fromNetwork = not args.from_file)
+		result, tmpList = ProcessObject(url, obj, outDir, gitTree, not args.from_file, args.user_agent)
 		success = success + result
 	log.Result(str(success) + "/" + str(objectsCount))
 
