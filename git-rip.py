@@ -237,7 +237,7 @@ def PrintHashes(outDir):
 def Main():
 	processedObjects = set()
 	gitTree = git.GitTree()
-	
+
 	argparser = argparse.ArgumentParser(description='Rip off data from .git directory')
 	argparser.add_argument("targetURL", help = "Target URL")
 	argparser.add_argument("--from-file", default = False, action='store_const', const=True, help = "Target is a directory, not URL")
@@ -246,7 +246,7 @@ def Main():
 	argparser.add_argument("--user-agent", default = None, nargs = '?', help = "User-agent")
 
 	args = argparser.parse_args()
-	
+
 	if (args.from_file):
 		url = args.targetURL
 		outDir = "out"
@@ -255,14 +255,15 @@ def Main():
 		if (url == ""):
 			return
 		outDir = urllib.parse.urlparse(url).netloc
-	
+
 	log.Info("Working with " + url)
 	log.Info("Saving results to " + outDir)
 	CreateDirs(outDir)
-	
-	if (not CheckTor(args.tor_host, args.tor_port)):
-		return
-	
+
+	if (not args.from_file):
+		if (not CheckTor(args.tor_host, args.tor_port)):
+			return
+
 	RetrieveRootFiles(url, outDir, args.user_agent, not args.from_file)
 	PrintHashes(outDir)
 	objSet = ParseLogsHead(os.path.join(outDir, "logs", "HEAD"))

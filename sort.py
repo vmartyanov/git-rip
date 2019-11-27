@@ -37,7 +37,7 @@ for line in logFile:
   l = fileName.split(".")
   if (len(l) < 2):    #no dot
     pass
-  elif (l[0] == ""):
+  elif (len(l) == 2 and l[0] == ""):
     pass              #.name case
   else:
     ext = l[-1]
