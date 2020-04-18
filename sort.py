@@ -46,7 +46,11 @@ for line in logFile:
 
   dstDir = os.path.join(outDir, ext)
   if (not os.path.exists(dstDir)):
-    os.makedirs(dstDir)
+    try:
+      os.makedirs(dstDir)
+    except:
+      print ("Can't create directory " + dstDir)
+      continue
   shutil.copy(srcPath, dstDir)
 
 logFile.close()
