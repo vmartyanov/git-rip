@@ -7,4 +7,4 @@ decompressAll.py - decompress all object in a directory
 
 decompressFile.py - decompress single object
 
-sort.py - to sort files after git-rip.py by it's extension
+colorlog.py - colored logging
