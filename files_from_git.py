@@ -4,28 +4,9 @@ import sys
 
 import git_rip
 
-class FileROTransport(git_rip.BaseTransport):
-    """Read-only file transport. No write/copy operations performed."""
-    def __init__ (self, target: str):
-        """Initialize transport."""
-        self.target = target
-        self.out_dir = target
-
-        #does target exists?
-        if not os.path.exists(target):
-            raise git_rip.TransportException(f"{target} doesn't exists!")
-        #is it a dir?
-        if not os.path.isdir(target):
-            raise git_rip.TransportException(f"{target} is not a rirectory!")
-
-    def retrieve_file(self, relative_path: str) -> bool:
-        """Always return False, because we don't retrieve anything."""
-        return False
-
-
 def main() -> None:
     """Main function."""
-    transport = FileROTransport(sys.argv[1])
+    transport = git_rip.FileROTransport(sys.argv[1])
     tree = git_rip.TreeBuilder()
 
     #Get objects from logs/HEAD and process them
