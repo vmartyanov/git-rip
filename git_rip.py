@@ -131,7 +131,6 @@ class NetTransport(BaseTransport):
         fragments = urlparse(target)
         #check scheme
         scheme = fragments.scheme.lower()
-        print (fragments)
         if scheme not in ["http", "https"]:
             raise TransportException(f"Unsupported scheme {scheme}! Check URL!")
         #check path (and modify the target)
@@ -196,6 +195,24 @@ class FileTransport(BaseTransport):
         os.makedirs(os.path.dirname(out_path), exist_ok = True)
         shutil.copy(in_path, out_path)
         return True
+
+class FileROTransport(BaseTransport):
+    """Read-only file transport. No write/copy operations performed."""
+    def __init__ (self, target: str):
+        """Initialize transport."""
+        self.target = target
+        self.out_dir = target
+
+        #does target exists?
+        if not os.path.exists(target):
+            raise TransportException(f"{target} doesn't exists!")
+        #is it a dir?
+        if not os.path.isdir(target):
+            raise TransportException(f"{target} is not a rirectory!")
+
+    def retrieve_file(self, relative_path: str) -> bool:
+        """Always return False, because we don't retrieve anything."""
+        return False
 
 def parse_index(data: bytes, tree: TreeBuilder) -> set[str]:
     """Parse object hashes from index file."""
