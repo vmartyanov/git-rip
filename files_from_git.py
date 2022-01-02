@@ -42,6 +42,8 @@ def main() -> None:
     paths = set()
     for path, _ in items:
         paths.add(path)
+
+    for path in paths:
         try:
             print (path)
         except UnicodeEncodeError:
